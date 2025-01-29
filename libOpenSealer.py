@@ -47,14 +47,16 @@ class SealerArctic:
     ############       Construtor        ###########
     ################################################
 
-    def __init__(self,
-                 config="UO2", 
-                 altura_barra=55.3001,
-                 altura_shut=55.3002,
-                 particulas=15000,
-                 ciclos=400,
-                 inativo=40,
-                 atrasados=True):
+    def __init__(
+            self,
+            config="UO2",
+            cross="",
+            altura_barra=55.3001,
+            altura_shut=55.3002,
+            particulas=15000,
+            ciclos=400,
+            inativo=40,
+            atrasados=True):
         
         ## Configurações de combustível e geometria
         #Combustivel homogêneo
@@ -106,6 +108,12 @@ class SealerArctic:
             densidadeCombMOX=10.62, 
             densidadeRefrigerante=10.4851):
 
+        #Cria objeto para armazenar os materiais criados
+        self.materials = openmc.Materials()
+
+        #Já definir as cores dos materiais para os 'plots'
+        self.colors = {}
+
         #Escolhendo o material do combustível
         if tipoCombustivel=="UO2":
             print("################################################")
@@ -121,6 +129,9 @@ class SealerArctic:
             self.combustivel.add_nuclide('O18',  2.6720E-04, percent_type = 'wo')
             self.combustivel.volume = 2.69681E+05 #cm³
             self.combustivel.set_density('g/cm3', densidadeCombUO2)
+            self.materials.append(self.combustivel)
+            self.colors["self.combustivel"] = "yellow"
+
             
         elif tipoCombustivel=="UN":
             print("################################################")
@@ -135,6 +146,8 @@ class SealerArctic:
             self.combustivel.add_nuclide('N15',  2.1833E-04, percent_type = 'wo')
             self.combustivel.volume = 2.69681E+05 #cm³
             self.combustivel.set_density('g/cm3', densidadeCombUN)
+            self.materials.append(self.combustivel)
+            self.colors["self.combustivel"] = "green"
         
         elif tipoCombustivel=="U3Si2":
             print("################################################")
@@ -150,6 +163,8 @@ class SealerArctic:
             self.combustivel.add_nuclide('Si30', 2.4181E-03, percent_type = 'wo')
             self.combustivel.volume = 2.69681E+05 #cm³
             self.combustivel.set_density('g/cm3', densidadeCombU3Si2)
+            self.materials.append(self.combustivel)
+            self.colors["self.combustivel"] = "orange"
             
         elif tipoCombustivel=="MOX":
             print("################################################")
@@ -170,6 +185,8 @@ class SealerArctic:
             self.combustivel.add_nuclide('O18',   2.6615E-04, percent_type = 'wo')
             self.combustivel.volume = 2.69681E+05 #cm³
             self.combustivel.set_density('g/cm3', densidadeCombMOX)
+            self.materials.append(self.combustivel)
+            self.colors["self.combustivel"] = "red"
             
         elif tipoCombustivel=="UO2MOX":
             print("################################################")
@@ -185,6 +202,8 @@ class SealerArctic:
             self.combustivel.add_nuclide('O18',  2.6720E-04, percent_type = 'wo')
             self.combustivel.volume = 1.84518E+05 #cm³  1 célula combustível = 1.55975E+02 cm³
             self.combustivel.set_density('g/cm3', densidadeCombUO2)
+            self.materials.append(self.combustivel)
+            self.colors["self.combustivel"] = "yellow"
 
             self.MOX = openmc.Material(temperature = tempComb)
             self.MOX.add_nuclide('U235',  1.2862E-03, percent_type = 'wo')
@@ -199,23 +218,26 @@ class SealerArctic:
             self.MOX.add_nuclide('O18',   2.6615E-04, percent_type = 'wo')
             self.MOX.volume = 8.51622E+04 #cm³
             self.MOX.set_density('g/cm3', densidadeCombMOX)
+            self.materials.append(self.MOX)
+            self.colors["self.MOX"] = "red"
         
         #######################################################
         ############ Definição dos Outros Materiais ###########
         #######################################################
-           
+        
         self.reflec_ins = openmc.Material(temperature = tempSys)
         self.reflec_ins.add_nuclide('Y89',  3.2000E-02, percent_type = 'ao')
         self.reflec_ins.add_nuclide('O16',  6.5976E-01, percent_type = 'ao')
         self.reflec_ins.add_nuclide('O17',  2.5131E-04, percent_type = 'ao')
         self.reflec_ins.add_nuclide('O18',  1.3227E-03, percent_type = 'ao')
-
         self.reflec_ins.add_nuclide('Zr90', 1.5778E-01, percent_type = 'ao')
         self.reflec_ins.add_nuclide('Zr91', 3.4408E-02, percent_type = 'ao')
         self.reflec_ins.add_nuclide('Zr92', 5.2593E-02, percent_type = 'ao')
         self.reflec_ins.add_nuclide('Zr94', 5.3299E-02, percent_type = 'ao')
         self.reflec_ins.add_nuclide('Zr96', 8.5867E-03, percent_type = 'ao')
         self.reflec_ins.set_density('g/cm3', 6.0)
+        self.materials.append(self.reflec_ins)
+        self.colors["self.reflec_ins"]='blue'
 
         self.shield = openmc.Material(temperature = tempSys)
         self.shield.add_nuclide('B10', 7.3914E-01, percent_type = 'wo')
@@ -223,6 +245,8 @@ class SealerArctic:
         self.shield.add_nuclide('C12', 2.2730E-01, percent_type = 'wo')
         self.shield.add_nuclide('C13', 2.7646E-03, percent_type = 'wo')
         self.shield.set_density('g/cm3', 2.14)
+        self.materials.append(self.shield)
+        self.colors["self.shield"]='green'
 
         self.clad_SS316L = openmc.Material(temperature = tempSys)
         self.clad_SS316L.add_nuclide('C12',   2.9639E-04, percent_type = 'wo')
@@ -259,6 +283,8 @@ class SealerArctic:
         self.clad_SS316L.add_nuclide('Mo98',  6.1566E-03, percent_type = 'wo')
         self.clad_SS316L.add_nuclide('Mo100', 2.5073E-03, percent_type = 'wo')
         self.clad_SS316L.set_density('g/cm3', 8.0)
+        self.materials.append(self.clad_SS316L)
+        self.colors["self.clad_SS316L"]='gray'
 
         self.clad_15_15Ti = openmc.Material(temperature = tempClad_15_15Ti)
         self.clad_15_15Ti.add_nuclide('C12',  9.8798E-04, percent_type = 'wo')
@@ -315,6 +341,8 @@ class SealerArctic:
         self.clad_15_15Ti.add_nuclide('Ca46', 4.5864E-09, percent_type = 'wo')
         self.clad_15_15Ti.add_nuclide('Ca48', 2.2374E-07, percent_type = 'wo')
         self.clad_15_15Ti.set_density('g/cm3', 7.89)
+        self.materials.append(self.clad_15_15Ti)
+        self.colors["self.clad_15_15Ti"]='black'
 
         self.refrigerante = openmc.Material(temperature = tempRefri)
         self.refrigerante.add_nuclide('Pb204', 1.4000E-02, percent_type = 'ao')
@@ -322,6 +350,8 @@ class SealerArctic:
         self.refrigerante.add_nuclide('Pb207', 2.2100E-01, percent_type = 'ao')
         self.refrigerante.add_nuclide('Pb208', 5.2400E-01, percent_type = 'ao')
         self.refrigerante.set_density('g/cm3', densidadeRefrigerante)
+        self.materials.append(self.refrigerante)
+        self.colors["self.refrigerante"]='cyan'
 
         self.control = openmc.Material(temperature = tempSys)
         self.control.add_nuclide('B10', 1.4420E-01, percent_type = 'wo')
@@ -329,6 +359,8 @@ class SealerArctic:
         self.control.add_nuclide('C12', 2.1480E-01, percent_type = 'wo')
         self.control.add_nuclide('C13', 2.6120E-03, percent_type = 'wo')
         self.control.set_density('g/cm3', 2.25)
+        self.materials.append(self.control)
+        self.colors["self.control"]='pink'
 
         self.shut_down = openmc.Material(temperature = tempSys)
         self.shut_down.add_nuclide('B10',   6.4233E-01, percent_type = 'ao')
@@ -340,6 +372,8 @@ class SealerArctic:
         self.shut_down.add_nuclide('Re185', 6.4827E-02, percent_type = 'ao')
         self.shut_down.add_nuclide('Re187', 1.0851E-01, percent_type = 'ao')
         self.shut_down.set_density('g/cm3', 11.7)
+        self.materials.append(self.shut_down)
+        self.colors["self.shut_down"]='purple'
 
         self.clad_Fe10Cr4Al = openmc.Material(temperature = tempSys)
         self.clad_Fe10Cr4Al.add_nuclide('C12',  2.9639E-04, percent_type = 'wo')
@@ -357,6 +391,8 @@ class SealerArctic:
         self.clad_Fe10Cr4Al.add_nuclide('Fe57', 1.8081E-02, percent_type = 'wo')
         self.clad_Fe10Cr4Al.add_nuclide('Fe58', 2.4485E-02, percent_type = 'wo')
         self.clad_Fe10Cr4Al.set_density('g/cm3', 7.3)
+        self.materials.append(self.clad_Fe10Cr4Al)
+        self.colors["self.clad_Fe10Cr4Al"]='brown'
 
         self.clad_Fe10Cr4AlRE = openmc.Material(temperature = tempSys)
         self.clad_Fe10Cr4AlRE.add_nuclide('Al27', 4.0000E-02, percent_type = 'wo')
@@ -384,59 +420,12 @@ class SealerArctic:
         self.clad_Fe10Cr4AlRE.add_nuclide('Si29', 3.3727E-05, percent_type = 'wo')
         self.clad_Fe10Cr4AlRE.add_nuclide('Si30', 2.3159E-05, percent_type = 'wo')
         self.clad_Fe10Cr4AlRE.set_density('g/cm3', 7.3)
+        self.materials.append(self.clad_Fe10Cr4AlRE)
+        self.colors["self.clad_Fe10Cr4AlRE"]='magenta'
 
-        #Criando lista de materiais
-        self.materials = openmc.Materials ([self.clad_Fe10Cr4AlRE,
-                                            self.clad_Fe10Cr4Al,
-                                            self.shut_down,
-                                            self.control,
-                                            self.refrigerante,
-                                            self.clad_15_15Ti,
-                                            self.clad_SS316L,
-                                            self.shield,
-                                            self.reflec_ins,
-                                            self.combustivel])
-        
-        #Se a variável self.MOX existir, adicione a lista de materiais
-        if tipoCombustivel=="UO2MOX":
-            self.materials.append(self.MOX)
-        
-        #Selecionando o a biblioteca de sessão de choque baseada no tipo de combustível
-        #Se o arquivo gerado existir
-        if os.path.exists("/home/jefferson/git/SealerArctic/OpenMC/cross_sections/libENDF8H5/cross_sections.xml"):
-            self.materials.cross_sections = "/home/jefferson/git/SealerArctic/OpenMC/cross_sections/libENDF8H5/cross_sections.xml"
-        elif os.path.exists("/home/jefferson/mestrado/SealerArctic/OpenMC/cross_sections/libENDF8H5/cross_sections.xml"):
-            self.materials.cross_sections = "/home/jefferson/mestrado/SealerArctic/OpenMC/cross_sections/libENDF8H5/cross_sections.xml"
-        #Se nenhuma das duas forem definidas será usado variável de ambiente OPENMC_CROSS_SECTIONS
-            
         #Gerando input XML dos materiais
         self.materials.export_to_xml()
         
-        #Definindo variável de cores dos materiais para plotagem
-        self.colors = {
-            self.clad_Fe10Cr4AlRE:'magenta',
-            self.clad_Fe10Cr4Al:'brown',
-            self.shut_down:'purple',
-            self.control:'pink',
-            self.refrigerante:'cyan',
-            self.clad_15_15Ti:'black',
-            self.clad_SS316L:'gray',
-            self.shield:'green',
-            self.reflec_ins:'blue'
-        }
-        
-        #Escolhendo a cor do combustível baseado no tipo de combustível
-        if tipoCombustivel == "UO2":
-            self.colors[self.combustivel] = 'yellow'
-        elif tipoCombustivel == "UN":
-            self.colors[self.combustivel] = 'green'
-        elif tipoCombustivel == "U3Si2":
-            self.colors[self.combustivel] = 'orange'
-        elif tipoCombustivel == "MOX":
-            self.colors[self.combustivel] = 'red'
-        elif tipoCombustivel=="UO2MOX":
-            self.colors[self.combustivel] = 'yellow'
-            self.colors[self.MOX] = 'red'
     ################################################"
     ############ Definição da Geometria ############"
     ################################################"
