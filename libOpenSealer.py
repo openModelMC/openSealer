@@ -25,7 +25,9 @@ print("#######################################################################")
 print("#######################################################################")
 
 
-
+################################################
+############  Controle de diretório  ###########
+################################################
 def dir(nome="teste_sem_nome",data=True,voltar=False):
     if (voltar==True):
         os.chdir("../")
@@ -36,7 +38,14 @@ def dir(nome="teste_sem_nome",data=True,voltar=False):
         os.makedirs(nome)
     os.chdir(nome)
 
+################################################
+############         Classe          ###########
+################################################
 class SealerArctic:
+
+    ################################################
+    ############       Construtor        ###########
+    ################################################
 
     def __init__(self,
                  config="UO2", 
@@ -47,46 +56,55 @@ class SealerArctic:
                  inativo=40,
                  atrasados=True):
         
+        ## Configurações de combustível e geometria
+        #Combustivel homogêneo
         if config=="UO2" or config=="UN" or config=="U3Si2" or config=="MOX":
-            self.config = self.materiais(tipoCombustivel=config) 
-            self.geometria(altura_barra=altura_barra,
-                           altura_shut=altura_shut)
-            
+            self.materiais(tipoCombustivel=config,cross=cross) 
+            self.geometria(altura_barra=altura_barra,altura_shut=altura_shut)
+
+        #Combustível heterogêno
         elif (config=="UO2+MOX_anel_intermediario"):
-            self.config = self.materiais(tipoCombustivel="UO2MOX")
-            self.geometria(altura_barra=altura_barra,
-                           altura_shut=altura_shut)
+            self.materiais(tipoCombustivel="UO2MOX",cross=cross)
+            self.geometria(altura_barra=altura_barra,altura_shut=altura_shut,mox_anel_intermediario=True)
             
         elif (config=="UO2+MOX_anel_externo_1"):
-            self.config = self.materiais(tipoCombustivel="UO2MOX")
-            self.geometria(altura_barra=altura_barra,
-                           altura_shut=altura_shut)
+            self.materiais(tipoCombustivel="UO2MOX",cross=cross)
+            self.geometria(altura_barra=altura_barra,altura_shut=altura_shut,mox_anel_externo_1=True)
             
         elif (config=="UO2+MOX_anel_externo_2"):
-            self.config = self.materiais(tipoCombustivel="UO2MOX")
-            self.geometria(altura_barra=altura_barra,
-                           altura_shut=altura_shut)
+            self.materiais(tipoCombustivel="UO2MOX",cross=cross)
+            self.geometria(altura_barra=altura_barra,altura_shut=altura_shut,mox_anel_externo_2=True)
             
         else:
             self.__del__(self)
 
-        #Definindo simulação
+        ## Definições de simulação
         self.configuracoes(particulas, ciclos, inativo, atrasados)
-            
+
+    ################################################
+    ############        Destrutor        ###########
+    ################################################
+
     def __del__(self):
         print(f"Objeto destruído.")
         
-    def materiais(self, 
-                  tipoCombustivel= "UO2", 
-                  tempComb=750, 
-                  tempSys=663.0, 
-                  tempRefri=684.0, 
-                  tempClad_15_15Ti=690.0, 
-                  densidadeCombUO2=10.48, 
-                  densidadeCombUN=13.7426,
-                  densidadeCombU3Si2=11.5655, 
-                  densidadeCombMOX=10.62, 
-                  densidadeRefrigerante=10.4851):
+    ################################################
+    ############ Definição dos Materiais ###########
+    ################################################
+
+    def materiais(
+            self, 
+            tipoCombustivel= "UO2", 
+            cross="",
+            tempComb=750, 
+            tempSys=663.0, 
+            tempRefri=684.0, 
+            tempClad_15_15Ti=690.0, 
+            densidadeCombUO2=10.48, 
+            densidadeCombUN=13.7426,
+            densidadeCombU3Si2=11.5655, 
+            densidadeCombMOX=10.62, 
+            densidadeRefrigerante=10.4851):
 
         #Escolhendo o material do combustível
         if tipoCombustivel=="UO2":
@@ -419,9 +437,16 @@ class SealerArctic:
         elif tipoCombustivel=="UO2MOX":
             self.colors[self.combustivel] = 'yellow'
             self.colors[self.MOX] = 'red'
+    ################################################"
+    ############ Definição da Geometria ############"
+    ################################################"
     
-    def geometria(self,altura_barra=55.3001,altura_shut=55.3002,mox_anel_intermediario=False,
-                  mox_anel_externo_1=False,mox_anel_externo_2=False):
+    def geometria(
+            self,altura_barra=55.3001,
+            altura_shut=55.3002,
+            mox_anel_intermediario=False,
+            mox_anel_externo_1=False,
+            mox_anel_externo_2=False):
         print("################################################")
         print("############ Definição da Geometria ############")
         print("################################################")
@@ -845,7 +870,16 @@ class SealerArctic:
         self.mox_anel_externo_1     = mox_anel_externo_1
         self.mox_anel_externo_2     = mox_anel_externo_2
 
-    def configuracoes(self,particulas=15000,ciclos=400,inativo=40,atrasados=True):
+    ################################################
+    ########### Definição da Simulação  ############
+    ################################################
+
+    def configuracoes(
+            self,
+            particulas=15000,
+            ciclos=400,
+            inativo=40,
+            atrasados=True):
         print("################################################")
         print("########### Definição da Simulação  ############")
         print("################################################")
@@ -867,7 +901,13 @@ class SealerArctic:
         self.settings.source = openmc.IndependentSource(space=openmc.stats.Point())
         self.settings.export_to_xml()
 
-    def run(self,mpi=0):
+    ################################################"
+    ###########         Rodando         ############"
+    ################################################"
+
+    def run(
+            self,
+            mpi=0):
         print("################################################")
         print("###########         Rodando         ############")
         print("################################################")
@@ -876,7 +916,13 @@ class SealerArctic:
         else:
             openmc.run()
 
-    def plotReator(self,base='xy'):
+    ################################################
+    ###########         Plotagem        ############
+    ################################################
+
+    def plotReator(
+            self,
+            base='xy'):
         print("################################################")
         print("###########         Plotagem        ############")
         print("################################################")
@@ -899,7 +945,18 @@ class SealerArctic:
         self.plotagem.export_to_xml()  
         openmc.plot_geometry()
     
-    def queima(self,timesteps,power,chain_file,timestep_units='d', diff=False):
+    ################################################
+    ###########         Depleção        ############
+    ################################################
+
+    def queima(
+            self,
+            timesteps,
+            power,
+            chain_file,
+            timestep_units='d',
+            diff=False,
+            results_file=""):
         print("################################################")
         print("###########         Depleção        ############")
         print("################################################")
@@ -915,6 +972,10 @@ class SealerArctic:
         # Deplete 
         CF4 = openmc.deplete.CF4Integrator(operator=op, timesteps=timesteps, power=power, timestep_units=timestep_units) 
         CF4.integrate()
+
+    ################################################
+    ############ Definição dos Tallies  ############
+    ################################################
 
     def talliesReaction(self):
         print("################################################")
@@ -1187,6 +1248,10 @@ class SealerArctic:
 
         tallies = openmc.Tallies([tally_fission, heating_tally, fission_all])
         tallies.export_to_xml()
+
+    ################################################
+    ############   Trabalhando Dados    ############
+    ################################################
 
     def trabalhandoDadosInverseVelocity(self):
         print("################################################")
