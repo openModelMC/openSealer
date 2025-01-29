@@ -966,8 +966,11 @@ class SealerArctic:
         if diff:
             model.differentiate_depletable_mats(diff_volume_method = 'divide equally')
 
-        results = openmc.deplete.Results.from_hdf5('/home/jefferson/mestrado/SealerArcticResults/resultados_UN_U3Si2/queima/30years_low_U3Si2_CF4/depletion_results.h5') # Continuando a queima interrompida
-        op = openmc.deplete.CoupledOperator(model, chain_file, diff_burnable_mats=diff, prev_results=results) # prev_results=results
+        if not os.path.exists(results_file): #Inicia uma queima nova
+            op = openmc.deplete.CoupledOperator(model, chain_file, diff_burnable_mats=diff)
+        else: #Continua uma queima de onde parou
+            results = openmc.deplete.Results.from_hdf5(results_file)
+            op = openmc.deplete.CoupledOperator(model, chain_file, diff_burnable_mats=diff, prev_results=results)
         
         # Deplete 
         CF4 = openmc.deplete.CF4Integrator(operator=op, timesteps=timesteps, power=power, timestep_units=timestep_units) 
