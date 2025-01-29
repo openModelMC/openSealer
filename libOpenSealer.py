@@ -423,6 +423,10 @@ class SealerArctic:
         self.materials.append(self.clad_Fe10Cr4AlRE)
         self.colors["self.clad_Fe10Cr4AlRE"]='magenta'
 
+        #Se o caminho "cross" não existe, será usado a variável de ambiente OPENMC_CROSS_SECTIONS
+        if os.path.exists(cross):
+                self.materials.cross_sections = cross
+
         #Gerando input XML dos materiais
         self.materials.export_to_xml()
         
